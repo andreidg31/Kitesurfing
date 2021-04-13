@@ -4,88 +4,16 @@ import GoogleMap  from 'google-map-react';
 import { Row, Table, Container } from 'react-bootstrap';
 import axios from 'axios';
 import config from '../../config';
+import {columns, paginationOptions} from '../Constants';
 import BootstrapTable from 'react-bootstrap-table-next';
+import paginationFactory from 'react-bootstrap-table2-paginator';
+import Marker from '../elements/Marker';
 
 const Dashboard = () => {
 
   const [user, setUser] = useState("");
   const [favourites, setFavourites] = useState([]);
   const [spots, setSpots] = useState([]);
-
-
-  const columns = [{
-    dataField: 'id',
-    text: '#',
-    sort: true,
-    sortFunc: (a, b, order, dataField, rowA, rowB) => {
-        if (order === 'asc') {
-        return b - a;
-        }
-        return a - b;
-    }
-  }, {
-    dataField: 'name',
-    text: 'Name',
-    sort: true,
-    sortFunc: (a, b, order, dataField, rowA, rowB) => {
-        if (order === 'asc') {
-            const aux = a;
-            a = b;
-            b = aux;
-        }
-        if(a < b) { return -1; }
-        if(a > b) { return 1; }
-        return 0;
-    }
-  }, {
-    dataField: 'lat',
-    text: 'Lat',
-    sort: true,
-    sortFunc: (a, b, order, dataField, rowA, rowB) => {
-        if (order === 'asc') {
-        return b - a;
-        }
-        return a - b;
-    }
-  }, {
-    dataField: 'long',
-    text: 'Long',
-    sort: true,
-    sortFunc: (a, b, order, dataField, rowA, rowB) => {
-        if (order === 'asc') {
-        return b - a;
-        }
-        return a - b;
-    }
-  }, {
-    dataField: 'country',
-    text: 'Country',
-    sort: true,
-    sortFunc: (a, b, order, dataField, rowA, rowB) => {
-        if (order === 'asc') {
-            const aux = a;
-            a = b;
-            b = aux;
-        }
-        if(a < b) { return -1; }
-        if(a > b) { return 1; }
-        return 0;
-    }
-  }, {
-    dataField: 'month',
-    text: 'Month',
-    sort: true,
-    sortFunc: (a, b, order, dataField, rowA, rowB) => {
-        if (order === 'asc') {
-            const aux = a;
-            a = b;
-            b = aux;
-        }
-        if(a < b) { return -1; }
-        if(a > b) { return 1; }
-        return 0;
-    }
-  }];
 
   useEffect(() =>{
     getUser();
@@ -100,8 +28,8 @@ const Dashboard = () => {
       return;
     }
     const {data} = response;
-    setSpots(data);
-    console.log(data);
+    setSpots(data.map(spot =>{return {...spot, show:false} }));
+    console.log(data.map(spot =>{return {...spot, show:false} }));
   }
 
   const getFavourites = async () => {
@@ -111,7 +39,8 @@ const Dashboard = () => {
       return;
     }
     const {data} = response;
-    setFavourites(data);
+    console.log(data.map(fav => fav.spot.toString()));
+    setFavourites(data.map(fav => fav.spot.toString()));
   }
 
   const getUser = async () => {
@@ -140,33 +69,45 @@ const Dashboard = () => {
     }
     return null;
   }
-  const greatPlaces = [
-    {id: 'A', lat: 59.955413, lng: 30.337844},
-    {id: 'B', lat: 59.724, lng: 30.080}
-  ]
 
-  const places = greatPlaces
-  .map(place => {
-    const {id, lat, lng} = place;
+  const changeMarkerState = (id) => {
+    setSpots(
+      spots.map(spot =>{
+        if (spot.id === id) {
+          spot.show = true;
+        }
+        else {
+          spot.show = false;
+        }
+        return spot;
+      })
+    );
+  }
+
+  const spotMarkers = spots
+  .map(spot => {
+    const {id, lat, long} = spot;
 
     return (
-      <Container>
-          {id} {lat} {lng}
-      </Container>
+      <Marker key={id} lat={lat} lng={long} favourite={favourites.includes(spot.id.toString())} spot={spot} onMarkerClick={changeMarkerState}/>
     );
   });
+ 
 
   return (      
-    <Container>
+    <Container fluid>
+      <Container>
         <GoogleMap 
-          apiKey={config.MAPS_KEY }
+          bootstrapURLKeys={{key:config.MAPS_KEY }}
           style={{width: "100%", height: "500"}}
-          defaultCenter={{lat: 59.838043, lng: 30.337157}}
-          defaultZoom={11}
+          defaultCenter={{ lat: 50, lng: 50 }}
+          defaultZoom={1}
+          onClick={() => changeMarkerState(-1)}
         >
-          {places}
+         {spotMarkers}
         </GoogleMap>
-        <BootstrapTable keyField='id' data={ spots } columns={ columns } />
+      </Container>
+      <BootstrapTable keyField='id' data={ spots } columns={ columns } pagination={paginationFactory(paginationOptions)} />
     </Container>
   );
 }

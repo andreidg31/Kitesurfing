@@ -9,15 +9,15 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 
 ReactDOM.render(
-  <React.StrictMode>
+  // <React.StrictMode>
     <BrowserRouter>
       <Switch>
         <PrivateRoute path="/dashboard" component={Dashboard} />
         <AuthRoute path="/login" component={Login} />
         <Redirect from="/" to="/dashboard" />
       </Switch>
-    </BrowserRouter>
-  </React.StrictMode>,
+    </BrowserRouter>,
+  // </React.StrictMode>,
   document.getElementById('root')
 );
 
