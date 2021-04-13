@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
-import GoogleMap  from 'google-map-react';
+import GoogleMap from 'google-map-react';
 
-import { Row, Table, Container } from 'react-bootstrap';
+import { Col, Row, Table, Container, Navbar } from 'react-bootstrap';
 import axios from 'axios';
 import config from '../../config';
 import {columns, paginationOptions} from '../Constants';
@@ -29,7 +29,6 @@ const Dashboard = () => {
     }
     const {data} = response;
     setSpots(data.map(spot =>{return {...spot, show:false} }));
-    console.log(data.map(spot =>{return {...spot, show:false} }));
   }
 
   const getFavourites = async () => {
@@ -39,8 +38,7 @@ const Dashboard = () => {
       return;
     }
     const {data} = response;
-    console.log(data.map(fav => fav.spot.toString()));
-    setFavourites(data.map(fav => fav.spot.toString()));
+    setFavourites(data);
   }
 
   const getUser = async () => {
@@ -52,22 +50,6 @@ const Dashboard = () => {
     }
     const {data} = response;
     setUser(data);
-  }
-
-  const displaySpots = () => {
-  
-    if (spots.length > 0) {
-      const values = spots.map((spot, index) => <tr key={spot.id}>
-        <td>{(index + 1)}</td>
-        <td>{spot.name}</td>
-        <td>{spot.lat}</td>
-        <td>{spot.long}</td>
-        <td>{spot.country}</td>
-        <td>{spot.month}</td>
-      </tr>);
-      return values;
-    }
-    return null;
   }
 
   const changeMarkerState = (id) => {
@@ -84,31 +66,84 @@ const Dashboard = () => {
     );
   }
 
+  const addFavourite = (favourite) => {
+    setFavourites([...favourites, favourite]);
+  }
+
+  const removeFavourite = (id) => {
+    setFavourites(favourites.filter(fav => fav.id !== id));
+  }
   const spotMarkers = spots
-  .map(spot => {
+  .map((spot, index) => {
     const {id, lat, long} = spot;
 
     return (
-      <Marker key={id} lat={lat} lng={long} favourite={favourites.includes(spot.id.toString())} spot={spot} onMarkerClick={changeMarkerState}/>
+      <Marker key={index+1} lat={lat} lng={long} 
+        favourite={favourites.find(fav => fav.spot.toString() === spot.id.toString())} 
+        spot={spot}
+        onMarkerClick={changeMarkerState}
+        addFavourite={addFavourite}
+        removeFavourite={removeFavourite}
+        />
+        
     );
   });
- 
+  
+  // const MyMap = withScriptjs(withGoogleMap((props) =>  
+    // <GoogleMap 
+    //   bootstrapURLKeys={{key:config.MAPS_KEY }}
+    //   style={{width: "100%", height: "500"}}
+    //   defaultCenter={{ lat: 50, lng: 50 }}
+    //   defaultZoom={1}
+    //   onClick={() => changeMarkerState(-1)}
+    // >
+    //   {spotMarkers}
+    // </GoogleMap>
+  // ));
 
-  return (      
-    <Container fluid>
-      <Container>
-        <GoogleMap 
-          bootstrapURLKeys={{key:config.MAPS_KEY }}
-          style={{width: "100%", height: "500"}}
-          defaultCenter={{ lat: 50, lng: 50 }}
-          defaultZoom={1}
-          onClick={() => changeMarkerState(-1)}
-        >
-         {spotMarkers}
-        </GoogleMap>
+  const mapStyles = {
+    height: 500,
+    width: 500,
+    margin: 10
+  };
+
+  return (
+    <div>
+      <Navbar bg="dark">
+        <Navbar.Brand>
+          <img
+            src={user.avatar}
+            width="30"
+            height="30"
+            className="d-inline-block align-top"
+            alt=""
+          />
+        </Navbar.Brand>
+        <Navbar.Brand>
+          Kitesurfing
+        </Navbar.Brand>
+      </Navbar>
+      <Container fluid>
+        <Row lg>
+          <Col sm="12" md={{ size: 6}} style={{height:500}}>
+            <GoogleMap 
+              bootstrapURLKeys={{key:config.MAPS_KEY }}
+              style={{ padding:30, margin:20}}
+              defaultCenter={{ lat: 50, lng: 50 }}
+              defaultZoom={1}
+              onClick={() => changeMarkerState(-1)}
+            >
+              {spotMarkers}
+            </GoogleMap>
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <BootstrapTable style={{margin:30}} keyField='id' data={ spots } columns={ columns } pagination={paginationFactory(paginationOptions)} />
+          </Col>
+        </Row>
       </Container>
-      <BootstrapTable keyField='id' data={ spots } columns={ columns } pagination={paginationFactory(paginationOptions)} />
-    </Container>
+    </div>
   );
 }
 

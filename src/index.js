@@ -9,7 +9,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 
 ReactDOM.render(
-  // <React.StrictMode>
     <BrowserRouter>
       <Switch>
         <PrivateRoute path="/dashboard" component={Dashboard} />
@@ -17,7 +16,6 @@ ReactDOM.render(
         <Redirect from="/" to="/dashboard" />
       </Switch>
     </BrowserRouter>,
-  // </React.StrictMode>,
   document.getElementById('root')
 );
 
